@@ -1,0 +1,17 @@
+Package: FluHMM
+Type: Package
+Title: Hidden Markov Model for influenza sentinel surveillance
+Version: 0.1.0
+Author: Theodore Lytras
+Maintainer: Theodore Lytras <thlytras@gmail.com>
+Depends:
+    rjags
+Description: Functions to facilitate fitting of a Bayesian HMM (Hidden Markov
+    Model) to influenza sentinel surveillance data, segment the surveillance
+    period into five epidemic phases (pre-epidemic, epidemic growth, epidemic 
+    plateau, epidemic decline and post-epidemic phase) and determine the
+    weekly posterior probability of each phase. Results can be summarized and
+    graphically plotted. 
+License: GPL (>=2)
+LazyData: TRUE
+RoxygenNote: 5.0.1
