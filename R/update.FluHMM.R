@@ -30,9 +30,10 @@
 update.FluHMM <- function(x, iter=5000, thin=1, Rhat=1.1, enlarge=FALSE) {
   if (is.null(x$model)) stop("Object has been \"compressed\" for storage. No further MCMC sampling possible")
   t <- unname(system.time({
-    varnamesA <- c("muPre", "beta", "sigma", "P12", "P23", "P24", "P34", "P45", "state", "mu")
+    varnamesA <- c("muPre", "beta", "sigma", "P12", "P23", "P24", "P34", "P45",
+                   "state", "mu", "binc", "bprop")
     varnamesB <- c("muPre", "beta[1]", "beta[2]", "beta[3]", "beta[4]", "sigma[1]", "sigma[2]",
-            "P12", "P23", "P24", "P34", "P45")
+            "P12", "P23", "P24", "P34", "P45", "binc", "bprop")
     cSample <- coda.samples(x$model, var=varnamesA, n.iter=iter, thin=thin)
     if (enlarge) {
       a <<- x$cSample
