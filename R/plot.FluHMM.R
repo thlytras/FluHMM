@@ -67,7 +67,7 @@ plot.FluHMM <- function(x, xlab="Week", ylab="ILI rate", main=NA, xaxis=NA, show
         wklab <- names(x$seasonRates)
       }
     } else {
-      wklab <- xaxis[1:length(seasonRates)]
+      wklab <- xaxis[1:length(x$seasonRates)]
     }
     axis(1, labels=wklab, at=1:length(wklab))
   }
