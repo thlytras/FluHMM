@@ -45,6 +45,7 @@ update.FluHMM <- function(x, iter=5000, thin=1, Rhat=1.1, enlarge=FALSE) {
     iterCount <- attributes(cSample[[1]])$mcpar[2]
     gelman <- gelman(cSample)
     converged <- (sum(gelman[,1]>Rhat)==0)
+    initConv <- (gelman["sigma[1]",1]<Rhat)
     eval.parent(substitute( x[["cSample"]] <- cSample ))
     eval.parent(substitute( x[["states"]] <- states ))
     eval.parent(substitute( x[["mu"]] <- mu ))
@@ -52,7 +53,7 @@ update.FluHMM <- function(x, iter=5000, thin=1, Rhat=1.1, enlarge=FALSE) {
     eval.parent(substitute( x[["iterCount"]] <- attributes(cSample[[1]])$mcpar[2] ))
     eval.parent(substitute( x[["gelman"]] <- gelman ))
     eval.parent(substitute( x[["converged"]] <- converged ))
-    eval.parent(substitute( x[["initConv"]] <- (x$initConv || converged) ))
+    eval.parent(substitute( x[["initConv"]] <- initConv ))
   })[3])
   eval.parent(substitute(x[["elapsedTime"]] <- x$elapsedTime + t ))
   invisible()
