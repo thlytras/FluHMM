@@ -76,4 +76,3 @@ After initial convergence is reached, a *new sample* should be generated for inf
 desired precision. If full convergence is not reached, the object can be \code{\link{autoUpdate}}d
 until full convergence.
 }
-

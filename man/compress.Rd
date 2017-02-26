@@ -19,4 +19,3 @@ After this operation results are still available and the object can be plotted, 
 not possible to generate further MCMC samples or run MCMC diagnostics. Use this function
 to compress the object for long-term storage, when you are satisfied with the output.
 }
-

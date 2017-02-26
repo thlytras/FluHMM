@@ -17,4 +17,3 @@ This method combines `mcmc.list' objects into a single `mcmc.list' object.
 Objects must have come from the same model, and have the same
 variable names and same number of chains.
 }
-

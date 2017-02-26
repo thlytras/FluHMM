@@ -19,6 +19,11 @@ autoInitConv(x, iter = 5000, maxit = 95000, Rhat = 1.1)
 \value{
 None. The function mutates its argument `x' directly.
 }
+\description{
+This function is not normally called by the user; it is called from \code{\link{FluHMM}} provided
+\code{initConv=TRUE} (the default). It generates posterior samples from the model repeatedly
+until convergence is reached for the sigma[1] parameter (this is called "initial convergence").
+}
 \details{
 The sigma[1] parameter (standard deviation of the pre-epidemic phase) is of primary
    importance in the model, since the pre-epidemic phase comes first and its correct identification
@@ -33,4 +38,3 @@ The sigma[1] parameter (standard deviation of the pre-epidemic phase) is of prim
    Then convergence for all parameters is checked again and, if not achieved, a new sample is generated
    from scratch or the current one further is further extended.
 }
-

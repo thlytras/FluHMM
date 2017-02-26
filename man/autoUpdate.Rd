@@ -45,4 +45,3 @@ Most parameters in the model converge fairly quickly, but mixing is slower for p
    it is advisable to thin the chain (i.e. by 10 or 20, i.e. keep every 10th or 20th element in the MCMC
    chain), to generate a smaller posterior sample with good coverage of the posterior distribution.
 }
-

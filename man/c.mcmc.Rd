@@ -22,4 +22,3 @@ Returns the combined `mcmc' object.
 This method combines `mcmc' objects into a single `mcmc' object.
 Objects must have come from the same model and have the same variable names.
 }
-

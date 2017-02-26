@@ -41,4 +41,3 @@ After reaching initial convergence (i.e. convergence for the sigma[1] parameter,
    Gelman-Rubin statistic is below 1.1) but beta[2] and beta[3] have not, it is recommended to
    *extend* the sample by running \code{update} with option \code{enlarge=TRUE}.
 }
-

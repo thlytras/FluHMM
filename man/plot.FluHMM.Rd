@@ -73,4 +73,3 @@ This function plots the ILI/ARI rates with the week number on the x-axis. If the
    In any case, if full convergence (for all model parameters) has not been reached, a clear warning
    will be displayed at the bottom left margin of the plot.
 }
-
