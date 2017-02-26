@@ -99,6 +99,7 @@ FluHMM <- function(rates, seasonRates=rates, weights=NULL, logSE=NULL, K=3, init
   })[3])
   .Object$elapsedTime <- t
   .Object$rates <- rates
+  .Object$K <- K
   .Object$seasonRates <- seasonRates
   .Object$weights <- weights
   .Object$logSE <- logSE

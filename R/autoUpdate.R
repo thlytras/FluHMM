@@ -56,7 +56,7 @@ autoUpdate <- function(x, iter=20000, maxit=200000, Rhat=1.1, thin=1) {
 
 #' Run MCMC iterations until initial convergence
 #'
-#' This function is not normally called by the user; it is called from \code{\link{FluHMM}}} provided
+#' This function is not normally called by the user; it is called from \code{\link{FluHMM}} provided
 #' \code{initConv=TRUE} (the default). It generates posterior samples from the model repeatedly
 #' until convergence is reached for the sigma[1] parameter (this is called "initial convergence").
 #'
@@ -101,7 +101,7 @@ autoInitConv <- function(x, iter=5000, maxit=95000, Rhat=1.1) {
       cat(sprintf("Not yet reached initial convergence: sampling for another %d iterations...\n", iter.next))
     }
     iter.remaining <- iter.remaining - iter.next
-    update(xx, iter=iter.next, Rhat=Rhat, thin=1)
+    update(xx, iter=iter.next, Rhat=Rhat, thin=1, enlarge=FALSE)
     eval.parent(substitute( x <- xx ))
   }
   if (xx$gelman["sigma[1]",1]<Rhat) {
