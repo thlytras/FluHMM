@@ -28,12 +28,20 @@
 #'
 #' @export
 update.FluHMM <- function(x, iter=5000, thin=1, Rhat=1.1, enlarge=FALSE) {
-  if (is.null(x$model)) stop("Object has been \"compressed\" for storage. No further MCMC sampling possible")
+  if (is.null(x$model)) 
+    stop("Object has been \"compressed\" for storage. No further MCMC sampling possible")
+  joint <- ("FluJointHMM" %in% class(x))
   t <- unname(system.time({
     varnamesA <- c("muPre", "beta", "sigma", "P12", "P23", "P24", "P34", "P45",
                    "state", "mu", "binc", "bprop")
     varnamesB <- c("muPre", "beta[1]", "beta[2]", "beta[3]", "beta[4]", "sigma[1]", "sigma[2]",
             "P12", "P23", "P24", "P34", "P45", "binc", "bprop")
+    if (joint) {
+      varnamesA <- c(varnamesA, "muPreIsol", "betaIsol", "sigmaIsol", "muIsol", "bincIsol", "bpropIsol")
+      varnamesB <- c(varnamesB, "muPreIsol", 
+            "betaIsol[1]", "betaIsol[2]", "betaIsol[3]", "betaIsol[4]", 
+            "sigmaIsol[1]", "sigmaIsol[2]", "bincIsol", "bpropIsol")
+    }
     cSample <- coda.samples(x$model, var=varnamesA, n.iter=iter, thin=thin)
     if (enlarge) {
       a <<- x$cSample
@@ -42,6 +50,9 @@ update.FluHMM <- function(x, iter=5000, thin=1, Rhat=1.1, enlarge=FALSE) {
     }
     states <- calculateStates(cSample)
     mu <- summary(cSample[,grep("mu\\[", varnames(cSample))])[[1]][,1]
+    if (joint) {
+      muIsol <- summary(cSample[,grep("muIsol\\[", varnames(cSample))])[[1]][,1]    
+    }
     params <- summary(cSample[, varnamesB])[[1]][,1:2]
     iterCount <- attributes(cSample[[1]])$mcpar[2]
     gelman <- gelman(cSample)
@@ -53,6 +64,9 @@ update.FluHMM <- function(x, iter=5000, thin=1, Rhat=1.1, enlarge=FALSE) {
     eval.parent(substitute( x[["cSample"]] <- cSample ))
     eval.parent(substitute( x[["states"]] <- states ))
     eval.parent(substitute( x[["mu"]] <- mu ))
+    if (joint) {
+      eval.parent(substitute( x[["muIsol"]] <- muIsol ))
+    }
     eval.parent(substitute( x[["params"]] <- params ))
     eval.parent(substitute( x[["iterCount"]] <- attributes(cSample[[1]])$mcpar[2] ))
     eval.parent(substitute( x[["gelman"]] <- gelman ))
