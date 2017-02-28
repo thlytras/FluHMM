@@ -29,7 +29,9 @@ calculateStates <- function(cSample) {
 
 gelman <- function(x, i=1:length(x)) {
     vars <- c("muPre", "sigma[1]", "sigma[2]", "beta[1]", "beta[2]", "beta[3]", "beta[4]",
-                "P12", "P23", "P24", "P34", "P45")
+                "P12", "P23", "P24", "P34", "P45",
+                "muPreIsol", "sigmaIsol[1]", "sigmaIsol[2]", 
+                "betaIsol[1]", "betaIsol[2]", "betaIsol[3]", "betaIsol[4]")
     vars <- vars[vars %in% varnames(x)]
     res <- gelman.diag(x[i][,vars])$psrf
     colnames(res) <- c("Point", "UpperCI")

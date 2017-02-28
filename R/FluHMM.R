@@ -6,6 +6,11 @@
 #'
 #' @param rates The set of weekly influenza-like illness / acute respiratory infection (ILI/ARI)
 #' rates obtained from sentinel surveillance, up to the current week, as a numeric vector.
+#' @param isolates A optional set of weekly numbers of influenza-positive lab isolates. Does not
+#' have to be of equal length with the set of rates. If specified, an object of class
+#' `FluJointHMM' is produced (inheriting also from class `FluHMM'), which jointly models both
+#' series (the rates and the number of isolates) as observations from the same Hidden Markov
+#' states chain.
 #' @param seasonRates The set of weekly ILI/ARI rates for the whole season, if available (i.e. if
 #' season has been compleated). This allows fitting the model for a partial season, but
 #' plotting it overlaid on the whole season, see \code{plot.FluHMM}.
@@ -25,7 +30,8 @@
 #' model information and results, and can be processed further as required. The minimum input is
 #' the set of weekly ILI/ARI rates (argument \code{rates}) up to the current week. The function fits
 #' the appropriate model in JAGS (with or without measurement error, depending on the argument
-#' \code{logSE}), and generates posterior samples for 5000 iterations. Six MCMC chains are used.
+#' \code{logSE}, and with or without a submodel for the isolates, depending on the argument
+#' \code{isolates}), and generates posterior samples for 5000 iterations. Six MCMC chains are used.
 #'
 #' Then, provided the argument \code{initConv} is \code{TRUE} (the default), the sample for
 #' sigma[1] (i.e. the standard deviation of the pre- and post-epidemic phases) is checked for
@@ -59,9 +65,15 @@
 #'  \item{weights}{The set of observation weights used (usually a vector of ones).}
 #'  \item{logSE}{The log standard error of the rates if available; \code{NULL} otherwise.}
 #' }
+#' In addition, if the object is also of class `FluJointHMM', it also contains the following elements:
+#' \describe{
+#'  \item{isolates}{The numbers of isolates that were used as input in the model.}
+#'  \item{muIsol}{A vector with the fitted mean number of isolates per week}
+#' }
 #'
 #' @export
-FluHMM <- function(rates, seasonRates=rates, weights=NULL, logSE=NULL, K=3, initConv=TRUE) {
+FluHMM <- function(rates, isolates=NULL, seasonRates=rates, weights=NULL, logSE=NULL,
+            K=3, initConv=TRUE) {
   if (sum(is.na(rates))>0)
     stop("No missing values allowed in 'rates' vector...\n")
   if (!is.null(weights) && (!is.numeric(weights) || length(rates)!=length(weights)))
@@ -77,13 +89,23 @@ FluHMM <- function(rates, seasonRates=rates, weights=NULL, logSE=NULL, K=3, init
     weights = weights
   )
   if (is.null(logSE)) {
-    fluModel <- paste(fluModelChunkA_noErr, fluModelChunkB, sep="\n")
+    fluModel <- list(fluModelChunkA_noErr, fluModelChunkB)
   } else {
-    fluModel <- paste(fluModelChunkA_err, fluModelChunkB, sep="\n")
+    fluModel <- list(fluModelChunkA_err, fluModelChunkB)
     dat$logSE.rate <- logSE
   }
   .Object <- list()
   class(.Object) <- "FluHMM"
+  if (!is.null(isolates)) {
+    fluModel <- c(fluModel, fluModelChunkIsol)[c(1,3,2)]
+    dat$nweeksIsol <- length(isolates)
+    dat$nIsol <- isolates
+    dat$SMAXisol <- max(isolates)
+    dat$SRisol <- diff(range(isolates))
+    dat$SSDisol <- sqrt((length(isolates)-1)*var(isolates)/qchisq(0.025, length(isolates)-1))
+    class(.Object) <- c("FluJointHMM", "FluHMM")
+  }
+  fluModel <- do.call(paste, c(fluModel, sep="\n"))
   cat("\nFitting a FluHMM object.\n\nRunning initial 5000 iterations, please wait...\n")
   ini <- function(chain) {
     ini.values <- list(
@@ -91,6 +113,10 @@ FluHMM <- function(rates, seasonRates=rates, weights=NULL, logSE=NULL, K=3, init
       muPre = 0
     )
     if (!is.null(logSE)) ini.values$trueRate <- rates
+    if (!is.null(isolates)) {
+      ini.values$sigmaIsol0 <- c(0.1, 0.1)
+      ini.values$muPreIsol <- 0
+    }
     return(ini.values)
   }
   t <- unname(system.time({
@@ -99,6 +125,9 @@ FluHMM <- function(rates, seasonRates=rates, weights=NULL, logSE=NULL, K=3, init
   })[3])
   .Object$elapsedTime <- t
   .Object$rates <- rates
+  if (!is.null(isolates)) {
+    .Object$isolates <- isolates
+  }
   .Object$K <- K
   .Object$seasonRates <- seasonRates
   .Object$weights <- weights
@@ -143,6 +172,9 @@ model {
 
 
 fluModelChunkB <- '
+
+  # ILI rate part
+
   sigma0[1] ~ dunif(0.1, SSD)
   sigma0[2] ~ dunif(0.1, SSD)
   sigma[1:2] <- sort(sigma0)
@@ -171,7 +203,9 @@ fluModelChunkB <- '
   beta[3] <- min(-beta[1]*2, binc*(bprop-1))
   beta[4] ~ dbeta(0.5,0.5)T(0.5,1)
 
+
   #Hidden Markov layer definition
+
   for (i in 1:K) {
     state[i] <- 1
   }
@@ -225,3 +259,45 @@ fluModelChunkB <- '
   Pmat[5,5] <- 1
 
 }'
+
+
+fluModelChunkIsol <- '
+
+  # Isolates part
+
+  for (i in 1:nweeksIsol) {
+    nIsol[i] ~ dpois(nTrueIsol[i])
+    nTrueIsol[i] ~ dnorm(muIsol[i], tauIsol[state[i]])T(0,)
+  }
+
+  sigmaIsol0[1] ~ dunif(0.1, SSDisol)
+  sigmaIsol0[2] ~ dunif(0.1, SSDisol)
+  sigmaIsol[1:2] <- sort(sigmaIsol0)
+
+  tauIsol[1] <- pow(sigmaIsol[1], -2)
+  for (i in 2:4) {
+    tauIsol[i] <- pow(sigmaIsol[2], -2)
+  }
+  tauIsol[5] <- pow(sigmaIsol[1], -2)
+  muIsol[1] <- muPreIsol
+  for (i in 2:nweeksIsol) {
+    muIsol[i] <- max(0, equals(state[i],1)*(muIsol[i-1] + betaIsol[1]) +
+        equals(state[i],2)*(muIsol[i-1] + betaIsol[2]) +
+        equals(state[i],3)*(muIsol[i-1]) +
+        equals(state[i],4)*(muIsol[i-1] + betaIsol[3]) +
+        equals(state[i],5)*(muIsol[i-1]*betaIsol[4]))
+  }
+
+  muPreIsol ~ dnorm(0, 0.001)T(0,SMAXisol)
+
+  bincIsol ~ dnorm(0, 0.001)T(0,SRisol*2)
+  bpropIsol ~ dbeta(2,2)
+
+  betaIsol[1] ~ dnorm(0, 0.001)T(0,SRisol)
+  betaIsol[2] <- max(betaIsol[1]*2, bincIsol*bpropIsol)
+  betaIsol[3] <- min(-betaIsol[1]*2, bincIsol*(bpropIsol-1))
+  betaIsol[4] ~ dbeta(0.5,0.5)T(0.5,1)
+
+  '
+
+

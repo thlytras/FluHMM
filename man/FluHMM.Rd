@@ -4,12 +4,18 @@
 \alias{FluHMM}
 \title{Create a FluHMM object}
 \usage{
-FluHMM(rates, seasonRates = rates, weights = NULL, logSE = NULL, K = 3,
-  initConv = TRUE)
+FluHMM(rates, isolates = NULL, seasonRates = rates, weights = NULL,
+  logSE = NULL, K = 3, initConv = TRUE)
 }
 \arguments{
 \item{rates}{The set of weekly influenza-like illness / acute respiratory infection (ILI/ARI)
 rates obtained from sentinel surveillance, up to the current week, as a numeric vector.}
+
+\item{isolates}{A optional set of weekly numbers of influenza-positive lab isolates. Does not
+have to be of equal length with the set of rates. If specified, an object of class
+`FluJointHMM' is produced (inheriting also from class `FluHMM'), which jointly models both
+series (the rates and the number of isolates) as observations from the same Hidden Markov
+states chain.}
 
 \item{seasonRates}{The set of weekly ILI/ARI rates for the whole season, if available (i.e. if
 season has been compleated). This allows fitting the model for a partial season, but
@@ -50,6 +56,11 @@ An object of class `FluHMM', which is a list with the following components:
  \item{weights}{The set of observation weights used (usually a vector of ones).}
  \item{logSE}{The log standard error of the rates if available; \code{NULL} otherwise.}
 }
+In addition, if the object is also of class `FluJointHMM', it also contains the following elements:
+\describe{
+ \item{isolates}{The numbers of isolates that were used as input in the model.}
+ \item{muIsol}{A vector with the fitted mean number of isolates per week}
+}
 }
 \description{
 This function takes the set of rates as input, fits the model in JAGS, and constructs
@@ -61,7 +72,8 @@ The function constructs an object of class `FluHMM', which contains all the inpu
 model information and results, and can be processed further as required. The minimum input is
 the set of weekly ILI/ARI rates (argument \code{rates}) up to the current week. The function fits
 the appropriate model in JAGS (with or without measurement error, depending on the argument
-\code{logSE}), and generates posterior samples for 5000 iterations. Six MCMC chains are used.
+\code{logSE}, and with or without a submodel for the isolates, depending on the argument
+\code{isolates}), and generates posterior samples for 5000 iterations. Six MCMC chains are used.
 
 Then, provided the argument \code{initConv} is \code{TRUE} (the default), the sample for
 sigma[1] (i.e. the standard deviation of the pre- and post-epidemic phases) is checked for

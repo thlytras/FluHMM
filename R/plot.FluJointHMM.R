@@ -1,11 +1,14 @@
-#' Plot a FluHMM object
+#' Plot a FluJointHMM object
 #'
-#' This function plots the ILI/ARI rates stored in a FluHMM object,
-#' superimposing the model results.
+#' This function plots the ILI/ARI rates and number of influenza-positive isolates stored
+#' in a FluJointHMM object, superimposing the model results. The input and output is
+#' mostly the same as \code{\link{plot.FluHMM}}, with an additional smaller sub-plot
+#' of the isolates at the bottom.
 #'
-#' @param x An object of class `FluHMM' to be plotted.
+#' @param x An object of class `FluJointHMM' to be plotted.
 #' @param xlab Label for the x-axis.
-#' @param ylab Label for the y-axis.
+#' @param ylab Label for the y-axis of the ILI/ARI rate sub-plot.
+#' @param ylabIsol Label for the y-axis of the isolates sub-plot.
 #' @param main Main label of the plot.
 #' @param xaxis How to annotate the x-axis of the plot. If \code{NULL}, no axis is being drawn
 #'    (equivalent to \code{xaxt='n'}). If \code{xaxis=0}, the axis names are taken from the
@@ -21,15 +24,17 @@
 #' @param mucol Color for plotting the fitted weekly mean rates.
 #' @param hues A numeric vector of length 5, with values between 0 and 1, containing the hue values
 #'    for each of the five phases in the model.
-#' @param rainbow If \code{TRUE}, the mean rates for each of the six chains are
-#'    individually plotted as well.
+#' @param rainbow If \code{TRUE}, the mean rates and mean number of isolates for each of the
+#'    six chains are individually plotted as well.
 #' @param ci If \code{TRUE}, semi-transparent 95% confidence bands are plotted around the rates,
-#'    provided the `FluHMM' object includes a logSE element (the log Standard Errors of the rates).
+#'    provided the `FluJointHMM' object includes a logSE element (the log Standard Errors of the rates).
 #' @param alpha Alpha transparency value for the confidence bands (a number between 0 and 1).
 #'
-#' @details This function plots the ILI/ARI rates with the week number on the x-axis. If the FluHMM
+#' @details This function plots the ILI/ARI rates with the week number on the x-axis. If the FluJointHMM
 #'    object has a \code{seasonRates} element, this is plotted as a thin grey line and the \code{rates}
 #'    are overlaid as a thick line with points, of color \code{col}.
+#'
+#'    A similar subplot (a bar plot) of the influenza-positive isolates is drawn under the ILI/ARI rates plot.
 #'
 #'    The posterior probabilities of the five epidemic phases per week (pre-epidemic, epidemic growth,
 #'    epidemic plateau, epidemic decline and post-epidemic) are displayed with colored bars on the top
@@ -44,21 +49,32 @@
 #'    each other; if very different, then the chains have probably not converged enough.
 #'
 #'    In any case, if full convergence (for all model parameters) has not been reached, a clear warning
-#'    will be displayed at the bottom left margin of the plot.
+#'    will be displayed on the plot.
 #'
 #' @return None
 #'
 #' @export
-plot.FluHMM <- function(x, xlab="Week", ylab="ILI rate", main=NA, xaxis=NA, showPs=TRUE, yexpand=0.3,
+plot.FluJointHMM <- function(x, xlab="Week", ylab="ILI rate", ylabIsol="Influenza(+) samples",
+            main=NA, xaxis=NA, showPs=TRUE, yexpand=0.3,
             col="red", mucol="limegreen", hues=c(4,0,2,5,3)/6, rainbow=FALSE, ci=TRUE, alpha=0.1) {
-  plot(x$seasonRates, type="l", col="grey", bty="l", xaxt="n",
-            ylim=c(0,(max(x$seasonRates, na.rm=TRUE))*(1.15+yexpand)), xlab=xlab, ylab=ylab, main=main)
-  ymax <- par("usr")[4]
-  y0 <- (par("usr")[4]-par("usr")[3])*0.9 + par("usr")[3]
-  yrow <- (ymax-y0)/5
+  layout(matrix(1:2), heights=c(3,2))
+  par(mar=c(2,4,4,2))
+  plot.FluHMM(x, xlab="", ylab=ylab, main=main, xaxis=xaxis, showPs=showPs, yexpand=yexpand,
+            col=col, mucol=mucol, hues=hues, rainbow=rainbow, ci=ci, alpha=alpha)
   abline(v=0.5+(0:length(x$seasonRates)), col="lightgrey", lty="dotted")
-  points(x$rates[1:nrow(x$states)], type="o", col=col, cex=0.8, lwd=2, pch=19)
-  points(x$mu, type="l", col=mucol, lwd=3, lty="dotted")
+  pos <- c(barplot(x$isolates[1:length(x$seasonRates)], plot=FALSE))
+  par(mar=c(5,4,2,2))
+  barplot(x$isolates[1:length(x$seasonRates)], col=col, border="white", xlim=range(pos),
+    ylim=c(0, ceiling(max(qchisq(0.975, 2*(x$isolates+1))/2)*1.05)), xlab=xlab, ylab=ylabIsol)
+  abline(v=c(pos[1]-unique(diff(pos))[1]/2, pos+unique(diff(pos))[1]/2),
+    col="lightgrey", lty="dotted")
+  if (ci) {
+    drawBand(x=pos[1:length(x$isolates)], col=addalpha(col, alpha),
+        y.lo=qchisq(0.025, 2*x$isolates)/2,
+        y.hi=qchisq(0.975, 2*(x$isolates+1))/2)
+  }
+  barplot(x$isolates[1:length(x$seasonRates)], col=col, border=col, add=TRUE)
+  points(x=pos[1:length(x$muIsol)], y=x$muIsol, type="l", col=mucol, lwd=3, lty="dotted")
   if (!is.null(xaxis)) {
     if (length(xaxis)==1) {
       if (is.na(xaxis)) {
@@ -69,37 +85,25 @@ plot.FluHMM <- function(x, xlab="Week", ylab="ILI rate", main=NA, xaxis=NA, show
     } else {
       wklab <- xaxis[1:length(x$seasonRates)]
     }
-    axis(1, labels=wklab, at=1:length(wklab))
-  }
-  if (showPs) {
-    text(x=1:nrow(x$states), y=y0-yrow, labels=apply(round(x$states), 1, paste, collapse="\n"), cex=0.7, pos=1)
-  }
-  for (st in 1:5) {
-    for (i in 1:nrow(x$states)) {
-      polygon(y=(5-st)*yrow + c(y0,y0+yrow,y0+yrow,y0),
-                x=c(-0.5,-0.5,0.5,0.5)+i, border=NA,
-                col=hsv(hues[st], x$states[i,st]/100, 1))
-    }
-  }
-  if (!is.null(x$logSE) && ci) {
-    drawBand(x=1:length(x$rates), col=addalpha(col, alpha),
-    y.lo=exp(log(x$rates) - 1.96*x$logSE),
-    y.hi=exp(log(x$rates) + 1.96*x$logSE))
+    axis(1, labels=wklab, at=pos)
   }
   if (rainbow) {
-    for (i in 1:6) points(
-      summary(x$cSample[[i]][,grep("mu\\[", varnames(x$cSample))])[[1]][,1],
+    for (i in 1:6) points(x=pos[1:length(x$muIsol)],
+      y=summary(x$cSample[[i]][,grep("muIsol\\[", varnames(x$cSample))])[[1]][,1],
       type="l", col=rainbow(6)[i])
   }
-  if (!x$converged) mtext("WARNING: model has NOT converged", side=1, adj=0, cex=0.8, line=2.5, col="darkred")
   if (!is.null(x$descr)) {
     # Mark the most likely first epidemic week, if probability > 0.5
     if (sum(x$states[nrow(x$states), 2:5])>50 && x$descr$firstEpiWeek[1,3]>50) {
-      text(x$descr$firstEpiWeek[1,"i"], y=0, "*", srt=90, adj=0, cex=2)
+      text(pos[x$descr$firstEpiWeek[1,"i"]],
+        y=ceiling(max(qchisq(0.975, 2*(x$isolates+1))/2)*1.05),
+        "*", srt=90, adj=1, cex=2)
     }
     # Mark the most likely peak intensity week, if probability > 0.5
     if (sum(x$states[nrow(x$states), 3:5])>50 && x$descr$peakWeek[1,3]>50) {
-      text(x$descr$peakWeek[1,"i"], y=0, "***", srt=90, adj=0, cex=2)
+      text(pos[x$descr$peakWeek[1,"i"]],
+        y=ceiling(max(qchisq(0.975, 2*(x$isolates+1))/2)*1.05),
+        "***", srt=90, adj=1, cex=2)
     }
   }
 }

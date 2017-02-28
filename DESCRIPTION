@@ -1,7 +1,7 @@
 Package: FluHMM
 Type: Package
 Title: Hidden Markov Model for influenza sentinel surveillance
-Version: 0.1.0
+Version: 0.2.0
 Author: Theodore Lytras
 Maintainer: Theodore Lytras <thlytras@gmail.com>
 Depends:
