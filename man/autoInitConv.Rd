@@ -30,7 +30,7 @@ The sigma[1] parameter (standard deviation of the pre-epidemic phase) is of prim
    is the basis on which to estimate the other phases. If convergence for sigma[1] has been reached,
    the other parameters in the model are very likely to have converged too, with the exception of
    beta[2] and beta[3] (slopes of the epidemic growth and epidemic decline phase); the latter mix
-   more slowly and may necessitate a longer, and possibly thinned, posterior sample.
+   more slowly and may necessitate a longer, and possibly thinned, MCMC chain.
 
    Therefore "initial convergence" is defined as convergence for the sigma[1] parameter. Unless
    this is achieved, it is inadvisable to use the posterior samples for any inference at all. Only

@@ -4,22 +4,22 @@
 \alias{FluHMM}
 \title{Create a FluHMM object}
 \usage{
-FluHMM(rates, isolates = NULL, seasonRates = rates, weights = NULL,
-  logSE = NULL, K = 3, initConv = TRUE)
+FluHMM(rates, seasonRates = rates, isolates = NULL, weights = NULL,
+  logSE = NULL, K = 3, initConv = TRUE, maxit = 95000)
 }
 \arguments{
 \item{rates}{The set of weekly influenza-like illness / acute respiratory infection (ILI/ARI)
 rates obtained from sentinel surveillance, up to the current week, as a numeric vector.}
+
+\item{seasonRates}{The set of weekly ILI/ARI rates for the whole season, if available (i.e. if
+season has been compleated). This allows fitting the model for a partial season, but
+plotting it overlaid on the whole season, see \code{plot.FluHMM}.}
 
 \item{isolates}{A optional set of weekly numbers of influenza-positive lab isolates. Does not
 have to be of equal length with the set of rates. If specified, an object of class
 `FluJointHMM' is produced (inheriting also from class `FluHMM'), which jointly models both
 series (the rates and the number of isolates) as observations from the same Hidden Markov
 states chain.}
-
-\item{seasonRates}{The set of weekly ILI/ARI rates for the whole season, if available (i.e. if
-season has been compleated). This allows fitting the model for a partial season, but
-plotting it overlaid on the whole season, see \code{plot.FluHMM}.}
 
 \item{weights}{A vector of of length equal to \code{length(rates)} containing observation
 weights for the rates. If \code{NULL}, all weights are set equal to 1.}
@@ -35,6 +35,8 @@ really belong to the pre-epidemic phase.}
 
 \item{initConv}{If \code{TRUE} (the default), MCMC samples are generated from the chains until
 initial convergence, see details.}
+
+\item{maxit}{Maximum number of iterations performet for initial convergence, see \code{\link{autoInitConv}}.}
 }
 \value{
 An object of class `FluHMM', which is a list with the following components:
