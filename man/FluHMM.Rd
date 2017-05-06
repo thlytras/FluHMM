@@ -5,7 +5,7 @@
 \title{Create a FluHMM object}
 \usage{
 FluHMM(rates, seasonRates = rates, isolates = NULL, weights = NULL,
-  logSE = NULL, K = 3, initConv = TRUE, maxit = 95000)
+  logSE = NULL, K = 3, priors = NULL, initConv = TRUE, maxit = 95000)
 }
 \arguments{
 \item{rates}{The set of weekly influenza-like illness / acute respiratory infection (ILI/ARI)

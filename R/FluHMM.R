@@ -74,11 +74,14 @@
 #'
 #' @export
 FluHMM <- function(rates, seasonRates=rates, isolates=NULL, weights=NULL, logSE=NULL,
-            K=3, initConv=TRUE, maxit=95000) {
+            K=3, priors=NULL, initConv=TRUE, maxit=95000) {
+  # Check for errors in provided data
   if (sum(is.na(rates))>0)
     stop("No missing values allowed in 'rates' vector...\n")
   if (!is.null(weights) && (!is.numeric(weights) || length(rates)!=length(weights)))
     stop("Argument 'logSE' must be a numeric vector of same length as 'rates'")
+  
+  # Set up the data for JAGS
   if (is.null(weights)) weights <- rep(1, length(rates))
   dat <- list(
     nweeks=length(rates),
@@ -87,8 +90,37 @@ FluHMM <- function(rates, seasonRates=rates, isolates=NULL, weights=NULL, logSE=
     SR = diff(range(rates)),
     SSD = sqrt((length(rates)-1)*var(rates)/qchisq(0.025, length(rates)-1)),
     K = K,
-    weights = weights
+    weights = weights,
+    PR.mu.beta1 = 0,
+    PR.tau.beta1 = 0.001,
+    PR.mu.binc = 0,
+    PR.tau.binc = 0.001,
+    PR.a.bprop = 2,
+    PR.b.bprop = 2,
+    PR.a.beta4 = 0.5,
+    PR.b.beta4 = 0.5
   )
+  
+  # Assign any provided priors
+  if (!is.null(priors)) {
+    if (!is.null(priors$binc)) {
+      if (!is.null(priors$binc$mu)) dat$PR.mu.binc <- priors$binc$mu
+      if (!is.null(priors$binc$sigma)) dat$PR.tau.binc <- priors$binc$sigma ^ (-2)
+    }
+    if (!is.null(priors$beta1)) {
+      if (!is.null(priors$beta1$mu)) dat$PR.mu.beta1 <- priors$beta1$mu
+      if (!is.null(priors$beta1$sigma)) dat$PR.tau.beta1 <- priors$beta1$sigma ^ (-2)
+    }
+    if (!is.null(priors$bprop)) {
+      if (!is.null(priors$bprop$alpha)) dat$PR.a.bprop <- priors$bprop$alpha
+      if (!is.null(priors$bprop$beta)) dat$PR.b.bprop <- priors$bprop$beta
+    }
+    if (!is.null(priors$beta4)) {
+      if (!is.null(priors$beta4$alpha)) dat$PR.a.beta4 <- priors$beta4$alpha
+      if (!is.null(priors$beta4$beta)) dat$PR.b.beta4 <- priors$beta4$beta
+    }
+  }
+  
   if (is.null(logSE)) {
     fluModel <- list(fluModelChunkA_noErr, fluModelChunkB)
   } else {
@@ -124,10 +156,14 @@ FluHMM <- function(rates, seasonRates=rates, isolates=NULL, weights=NULL, logSE=
     }
     return(ini.values)
   }
+  
+  # Now create the model (with no iterations)
   t <- unname(system.time({
     .Object$model <- jags.model(file = textConnection(fluModel), data = dat, inits=ini,
                         n.chains = 6, n.adapt = 0, quiet=TRUE)
   })[3])
+  
+  # Fill in the object attributes 
   .Object$elapsedTime <- t
   .Object$rates <- rates
   if (!is.null(isolates)) {
@@ -138,9 +174,12 @@ FluHMM <- function(rates, seasonRates=rates, isolates=NULL, weights=NULL, logSE=
   .Object$weights <- weights
   .Object$logSE <- logSE
   .Object$initConv <- FALSE
+  
+  # Update the object (run for 5000 iterations)
   update(.Object, iter=5000, enlarge=FALSE)
   cat("Initial sampling complete.\n")
   if (initConv==TRUE) {
+    # Keep updating until sigma[1] converges (initial convergence)
     autoInitConv(.Object, iter=5000, maxit=maxit)
   }
   return(.Object)
@@ -200,13 +239,13 @@ fluModelChunkB <- '
 
   muPre ~ dnorm(0, 0.001)T(0,SMAX)
 
-  binc ~ dnorm(0, 0.001)T(0,SR*2)
-  bprop ~ dbeta(2,2)
+  binc ~ dnorm(PR.mu.binc, PR.tau.binc)T(0,SR*2)
+  bprop ~ dbeta(PR.a.bprop, PR.b.bprop)
 
-  beta[1] ~ dnorm(0, 0.001)T(0,SR)
+  beta[1] ~ dnorm(PR.mu.beta1, PR.tau.beta1)T(0,SR)
   beta[2] <- max(beta[1]*2, binc*bprop)
   beta[3] <- min(-beta[1]*2, binc*(bprop-1))
-  beta[4] ~ dbeta(0.5,0.5)T(0.5,1)
+  beta[4] ~ dbeta(PR.a.beta4, PR.b.beta4)T(0.5,1)
 
 
   #Hidden Markov layer definition
