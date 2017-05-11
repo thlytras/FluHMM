@@ -91,7 +91,7 @@ plot.FluHMM <- function(x, xlab="Week", ylab="ILI rate", main=NA, xaxis=NA, show
       summary(x$cSample[[i]][,grep("mu\\[", varnames(x$cSample))])[[1]][,1],
       type="l", col=rainbow(6)[i])
   }
-  if (!x$converged) mtext("WARNING: model has NOT converged", side=1, adj=0, cex=0.8, line=2.5, col="darkred")
+  if (!x$converged) mtext("Warning: model NOT fully converged", side=1, adj=0, cex=0.8, line=2.5, col="darkred")
   if (!is.null(x$descr)) {
     # Mark the most likely first epidemic week, if probability > 0.5
     if (sum(x$states[nrow(x$states), 2:5])>50) { # && x$descr$firstEpiWeek[1,3]>50) {
