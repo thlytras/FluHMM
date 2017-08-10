@@ -15,6 +15,7 @@
 #'    as the week numbers to be plotted at the x-axis.
 #' @param showPs If \code{TRUE} (the default), show the weekly posterior probabilities of each phase
 #'    as a series of numbers too, instead of only a color representation.
+#' @param cexPs Character expansion factor (cex), i.e. size for plotting the posterior probabilities
 #' @param yexpand Factor (as a percentage of the original y-axis size) to expand the y-axis, so that the
 #'    numbers of the posterior probabilities do not overlap with the rest of the plot.
 #' @param col Color for plotting the weekly ILI/ARI rates
@@ -49,7 +50,8 @@
 #' @return None
 #'
 #' @export
-plot.FluHMM <- function(x, xlab="Week", ylab="ILI rate", main=NA, xaxis=NA, showPs=TRUE, yexpand=0.3,
+plot.FluHMM <- function(x, xlab="Week", ylab="ILI rate", main=NA, xaxis=NA, showPs=TRUE, cexPs=0.7,
+            yexpand=0.3,
             col="red", mucol="limegreen", hues=c(4,0,2,5,3)/6, rainbow=FALSE, ci=TRUE, alpha=0.1) {
   plot(x$seasonRates, type="l", col="grey", bty="l", xaxt="n",
             ylim=c(0,(max(x$seasonRates, na.rm=TRUE))*(1.15+yexpand)), xlab=xlab, ylab=ylab, main=main)
@@ -72,7 +74,7 @@ plot.FluHMM <- function(x, xlab="Week", ylab="ILI rate", main=NA, xaxis=NA, show
     axis(1, labels=wklab, at=1:length(wklab))
   }
   if (showPs) {
-    text(x=1:nrow(x$states), y=y0-yrow, labels=apply(round(x$states), 1, paste, collapse="\n"), cex=0.7, pos=1)
+    text(x=1:nrow(x$states), y=y0-yrow, labels=apply(round(x$states), 1, paste, collapse="\n"), cex=cexPs, pos=1)
   }
   for (st in 1:5) {
     for (i in 1:nrow(x$states)) {

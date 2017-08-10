@@ -6,8 +6,9 @@
 \usage{
 \method{plot}{FluJointHMM}(x, xlab = "Week", ylab = "ILI rate",
   ylabIsol = "Influenza(+) samples", main = NA, xaxis = NA,
-  showPs = TRUE, yexpand = 0.3, col = "red", mucol = "limegreen",
-  hues = c(4, 0, 2, 5, 3)/6, rainbow = FALSE, ci = TRUE, alpha = 0.1)
+  showPs = TRUE, cexPs = 0.7, yexpand = 0.3, col = "red",
+  mucol = "limegreen", hues = c(4, 0, 2, 5, 3)/6, rainbow = FALSE,
+  ci = TRUE, alpha = 0.1)
 }
 \arguments{
 \item{x}{An object of class `FluJointHMM' to be plotted.}
@@ -29,6 +30,8 @@ as the week numbers to be plotted at the x-axis.}
 
 \item{showPs}{If \code{TRUE} (the default), show the weekly posterior probabilities of each phase
 as a series of numbers too, instead of only a color representation.}
+
+\item{cexPs}{Character expansion factor (cex), i.e. size for plotting the posterior probabilities}
 
 \item{yexpand}{Factor (as a percentage of the original y-axis size) to expand the y-axis, so that the
 numbers of the posterior probabilities do not overlap with the rest of the plot.}

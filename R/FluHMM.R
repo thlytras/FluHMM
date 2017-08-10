@@ -160,7 +160,7 @@ FluHMM <- function(rates, seasonRates=rates, isolates=NULL, weights=NULL, logSE=
   # Now create the model (with no iterations)
   t <- unname(system.time({
     .Object$model <- jags.model(file = textConnection(fluModel), data = dat, inits=ini,
-                        n.chains = 6, n.adapt = 1000, quiet=TRUE)
+                        n.chains = 6, n.adapt = 0, quiet=TRUE)
   })[3])
   
   # Fill in the object attributes 
@@ -176,7 +176,7 @@ FluHMM <- function(rates, seasonRates=rates, isolates=NULL, weights=NULL, logSE=
   .Object$initConv <- FALSE
   
   # Update the object (run for 4000 iterations)
-  update(.Object, iter=4000, enlarge=FALSE)
+  update(.Object, iter=5000, enlarge=FALSE)
   cat("Initial sampling complete.\n")
   if (initConv==TRUE) {
     # Keep updating until sigma[1] converges (initial convergence)

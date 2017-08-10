@@ -18,6 +18,7 @@
 #'    as the week numbers to be plotted at the x-axis.
 #' @param showPs If \code{TRUE} (the default), show the weekly posterior probabilities of each phase
 #'    as a series of numbers too, instead of only a color representation.
+#' @param cexPs Character expansion factor (cex), i.e. size for plotting the posterior probabilities
 #' @param yexpand Factor (as a percentage of the original y-axis size) to expand the y-axis, so that the
 #'    numbers of the posterior probabilities do not overlap with the rest of the plot.
 #' @param col Color for plotting the weekly ILI/ARI rates
@@ -55,11 +56,11 @@
 #'
 #' @export
 plot.FluJointHMM <- function(x, xlab="Week", ylab="ILI rate", ylabIsol="Influenza(+) samples",
-            main=NA, xaxis=NA, showPs=TRUE, yexpand=0.3,
+            main=NA, xaxis=NA, showPs=TRUE, cexPs=0.7, yexpand=0.3,
             col="red", mucol="limegreen", hues=c(4,0,2,5,3)/6, rainbow=FALSE, ci=TRUE, alpha=0.1) {
   layout(matrix(1:2), heights=c(3,2))
   par(mar=c(2,4,4,2))
-  plot.FluHMM(x, xlab="", ylab=ylab, main=main, xaxis=xaxis, showPs=showPs, yexpand=yexpand,
+  plot.FluHMM(x, xlab="", ylab=ylab, main=main, xaxis=xaxis, showPs=showPs, cexPs=cexPs, yexpand=yexpand,
             col=col, mucol=mucol, hues=hues, rainbow=rainbow, ci=ci, alpha=alpha)
   abline(v=0.5+(0:length(x$seasonRates)), col="lightgrey", lty="dotted")
   pos <- c(barplot(x$isolates[1:length(x$seasonRates)], plot=FALSE))
